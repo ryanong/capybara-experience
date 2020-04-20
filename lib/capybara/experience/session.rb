@@ -47,7 +47,7 @@ module Capybara
         end
 
         def create(driver)
-          ::Capybara::Experiences::Session.create(driver).tap do |session|
+          ::Capybara::Experience::Session.create(driver).tap do |session|
             taken.push(session)
           end
         end

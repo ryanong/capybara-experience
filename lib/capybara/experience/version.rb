@@ -1,5 +1,5 @@
 module Capybara
-  module Experience
-    VERSION = "0.1.0"
+  class Experience
+    VERSION = "0.1.1"
   end
 end
