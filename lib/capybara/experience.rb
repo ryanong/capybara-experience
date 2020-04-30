@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require "capybara/experience/version"
 require "capybara/experience/session"
 
 module Capybara
@@ -25,11 +24,11 @@ module Capybara
     delegate :driver, to: :page
 
     def page
-      @page ||= Experiences::Session.next(driver: driver_name)
+      @page ||= Experience::Session.next(driver: driver_name)
     end
 
     def self.wait_for_pending_requests
-      Experiences::Session.pool.taken.each do |session|
+      Experience::Session.pool.taken.each do |session|
         session.server.try(:wait_for_pending_requests)
       end
     end
