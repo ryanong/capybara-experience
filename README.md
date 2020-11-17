@@ -98,7 +98,7 @@ RSpec.describe "sign up flow", feature: true do
   
   it "works" do
     behavior "user can sign up" do # behaviors are an added DSL by capybara-experiences to group interactions & assertions
-      guest_ux = GuestExpereince.new
+      guest_ux = GuestExperience.new
       guest_ux.navigate_to_sign_up
 
       guest_ux.sign_up(
