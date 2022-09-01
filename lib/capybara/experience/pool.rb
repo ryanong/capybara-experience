@@ -36,7 +36,7 @@ module Capybara
       end
 
       def reset_idle!
-        dup.each do |key, session|
+        to_h.each do |key, session|
           self[session_key(session)] = delete(key)
         end
         @idle = values
