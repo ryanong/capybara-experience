@@ -37,7 +37,7 @@ module Capybara
 
       def reset_idle!
         each do |key, session|
-          self[session_key(session)] = delete[key]
+          self[session_key(session)] = delete(key)
         end
         @idle = values
 
