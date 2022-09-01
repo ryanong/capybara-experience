@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 require "capybara/dsl"
-require "capybara/experience/session"
+require "capybara/experience/pool"
 
 module Capybara
   class Experience
@@ -23,28 +23,35 @@ module Capybara
     delegate :driver, to: :page
 
     def page
-      @page ||= Experience::Session.next(driver: driver_name)
+      @page ||= Experience::Pool.instance.take(driver: driver_name)
+
+      Capybara::Screenshot.final_session_name = @page.object_id if defined?(Capybara::Screenshot)
+
+      @page
     end
 
     def self.wait_for_pending_requests
-      Experience::Session.pool.taken.each do |session|
+      Experience::Pool.taken.each do |session|
         session.server.try(:wait_for_pending_requests)
       end
     end
 
-    def save_and_open_screenshot_full(path = nil, options = {})
-      save_and_open_screenshot(path, options.merge(full: true))
-    end
-
-    def click_with_js(element)
-      xpath = element.path
-      execute_script <<~JS
-        document.evaluate('#{xpath}', document, null, XPathResult.ANY_TYPE, null)
-          .iterateNext()
-          .click()
-      JS
-    end
-
     class Error < StandardError; end
+
+    module UnifySessionPool
+      def page
+        Capybara::Screenshot.final_session_name = Capybara.session_name if defined?(Capybara::Screenshot)
+
+        super
+      end
+
+      private
+
+      def session_pool
+        @session_pool ||= Experience::Pool.instance
+      end
+    end
   end
+
+  singleton_class.prepend Experience::UnifySessionPool
 end
