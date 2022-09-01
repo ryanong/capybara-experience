@@ -36,6 +36,8 @@ This scenario is for your standard user/admin.
 ```ruby
 # spec/support/experiences/user_experience.rb
 class UserExperience < Capybara::Experience
+  include Rails.application.routes.url_helpers
+
   def login(user)
     @user = user
     login_as user, scope: :user
