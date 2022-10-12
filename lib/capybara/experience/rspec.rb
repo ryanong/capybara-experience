@@ -15,7 +15,9 @@ module Capybara
 
       def refresh_description
         metadata[:description] = metadata[:description_args].join(" ")
-        metadata[:full_description] = [metadata[:example_group][:full_description]].concat(metadata[:description_args]).join(" ")
+        metadata[:full_description] =
+          [metadata[:example_group][:full_description]]
+            .concat(metadata[:description_args]).join(" ")
       end
 
       def metadata
@@ -23,13 +25,13 @@ module Capybara
       end
 
       def in_continuous_integration_env?
-        ENV["CI"].present?
+        ENV["CI"]&.empty?
       end
     end
 
     RSpec.configure do |config|
       config.include BehaviorDSL
-      config.prepend_after :each, type: :feature, js: true do
+      config.after :each, type: :feature, js: true do
         Capybara::Experience::Pool.instance.reset_idle!
       end
     end

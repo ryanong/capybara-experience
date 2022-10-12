@@ -6,7 +6,11 @@ module Capybara
   class Experience
     include Capybara::DSL
 
-    delegate :t, to: I18n if defined?(I18n)
+    if defined?(I18n)
+      def t(*arg)
+        I18n.t(*args)
+      end
+    end
 
     def initialize(driver_name: nil)
       @driver_name = driver_name
@@ -20,7 +24,9 @@ module Capybara
       @driver_name ||= Capybara.current_driver
     end
 
-    delegate :driver, to: :page
+    def driver
+      page.driver
+    end
 
     def page
       @page ||= Experience::Pool.instance.take(driver: driver_name)

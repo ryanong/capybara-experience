@@ -1,5 +1,16 @@
 require "bundler/setup"
+require "capybara/rspec"
 require "capybara/experience"
+require "capybara/experience/rspec"
+require "capybara/spec/test_app"
+
+Capybara.app = TestApp
+
+Capybara.register_driver :javascript_test do |app|
+  Capybara::RackTest::Driver.new(app)
+end
+
+Capybara.javascript_driver = :javascript_test
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

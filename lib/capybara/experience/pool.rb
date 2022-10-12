@@ -9,7 +9,7 @@ module Capybara
       def [](key)
         super(key) || begin
           driver, _session_name, app_object_id = key.split(":")
-          take(driver: driver, app_object_id: app_object_id, key: key)
+          take(driver: driver.to_sym, app_object_id: app_object_id.to_i, key: key)
         end
       end
 
@@ -36,9 +36,10 @@ module Capybara
       end
 
       def reset_idle!
-        to_h.each do |key, session|
-          self[session_key(session)] = delete(key)
+        new_hash = each_with_object({}) do |(key, session), hash|
+          hash[session_key(session)] = delete(key)
         end
+        replace(new_hash)
         @idle = values
 
         nil
