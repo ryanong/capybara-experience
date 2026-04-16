@@ -27,6 +27,8 @@ module Capybara
         session
       end
 
+      attr_accessor :last_session
+
       def idle
         @idle ||= []
       end
@@ -41,6 +43,7 @@ module Capybara
         end
         replace(new_hash)
         @idle = values
+        @last_session = nil
 
         nil
       end

@@ -34,6 +34,7 @@ module Capybara
     def page
       @page ||= Experience::Pool.instance.take(driver: driver_name)
 
+      Experience::Pool.instance.last_session = @page
       Capybara::Screenshot.final_session_name = @page.object_id if defined?(Capybara::Screenshot)
 
       @page
@@ -63,9 +64,9 @@ module Capybara
 
     module UnifySessionPool
       def page
-        Capybara::Screenshot.final_session_name = Capybara.session_name if defined?(Capybara::Screenshot)
-
-        super
+        Experience::Pool.instance.last_session = super.tap do
+          Capybara::Screenshot.final_session_name = Capybara.session_name if defined?(Capybara::Screenshot)
+        end
       end
 
       private
