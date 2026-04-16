@@ -4,6 +4,7 @@ require "capybara/experience"
 require "capybara/experience/rspec"
 require "capybara/spec/test_app"
 
+TestApp.set :host_authorization, { permitted_hosts: [] }
 Capybara.app = TestApp
 
 Capybara.register_driver :javascript_test do |app|

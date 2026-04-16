@@ -2,6 +2,41 @@ require "spec_helper"
 require "pry-byebug"
 
 RSpec.feature Capybara::Experience do
+  before do
+    @page = nil
+    Capybara.reset_sessions!
+    Capybara::Experience::Pool.instance.reset_idle!
+    Capybara::Experience::Pool.instance.clear
+    Capybara::Experience::Pool.instance.idle.clear
+  end
+
+  it "delegates rspec assertions to test context" do
+    ux = described_class.new(self)
+    ux.visit "/foo"
+
+    ux.expect(ux.page).to ux.have_content("Another World")
+    ux.expect(ux.page).to ux.have_text("Another World")
+    ux.expect(ux.page).not_to ux.have_content("Does not exist")
+  end
+
+  it "allows subclasses to use assertions" do
+    klass = Class.new(described_class) do
+      def verify_content(text)
+        visit "/foo"
+        expect(page).to have_content(text)
+      end
+    end
+
+    ux = klass.new(self)
+    ux.verify_content("Another World")
+  end
+
+  it "works without test context" do
+    ux = described_class.new
+    ux.visit "/foo"
+    expect(ux).to have_content("Another World")
+  end
+
   it "test pool" do
     page.visit "/foo"
     expect(page).to have_content "Another World"

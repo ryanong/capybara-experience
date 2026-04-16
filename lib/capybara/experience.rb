@@ -12,9 +12,12 @@ module Capybara
       end
     end
 
-    def initialize(driver_name: nil)
+    def initialize(test_context = nil, driver_name: nil)
+      @test_context = test_context
       @driver_name = driver_name
     end
+
+    attr_reader :test_context
 
     def reload_page
       visit current_url

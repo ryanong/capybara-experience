@@ -29,6 +29,20 @@ module Capybara
       end
     end
 
+    module RSpecContext
+      def expect(...)
+        test_context.expect(...)
+      end
+
+      Capybara::RSpecMatchers.instance_methods(false).each do |method_name|
+        define_method(method_name) do |*args, **kwargs, &block|
+          test_context.send(method_name, *args, **kwargs, &block)
+        end
+      end
+    end
+
+    include RSpecContext
+
     RSpec.configure do |config|
       config.include BehaviorDSL
       config.after :each, type: :feature, js: true do
