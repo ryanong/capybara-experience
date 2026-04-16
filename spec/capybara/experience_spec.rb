@@ -1,6 +1,13 @@
 require "spec_helper"
 require "pry-byebug"
 
+class RSpecUserExperience < Capybara::Experience
+  def verify_content(text)
+    visit "/foo"
+    expect(page).to have_content(text)
+  end
+end
+
 RSpec.feature Capybara::Experience do
   before do
     @page = nil
@@ -35,6 +42,23 @@ RSpec.feature Capybara::Experience do
     ux = described_class.new
     ux.visit "/foo"
     expect(ux).to have_content("Another World")
+  end
+
+  it "DSL creates factory method for subclass" do
+    ux = RSpecUserExperience()
+    expect(ux).to be_a(RSpecUserExperience)
+    expect(ux.test_context).to eq(self)
+  end
+
+  it "DSL factory passes kwargs" do
+    ux = RSpecUserExperience(driver_name: :javascript_test)
+    expect(ux.driver_name).to eq(:javascript_test)
+    expect(ux.test_context).to eq(self)
+  end
+
+  it "DSL factory method works with assertions" do
+    ux = RSpecUserExperience()
+    ux.verify_content("Another World")
   end
 
   it "test pool" do

@@ -11,7 +11,25 @@ module Capybara
       end
     end
 
+    module MinitestBehaviorDSL
+      def behavior(name)
+        @_behavior_stack ||= []
+        @_behavior_stack.push(name)
+        yield
+      ensure
+        @_behavior_stack.pop
+      end
+
+      def current_behavior
+        @_behavior_stack ||= []
+        @_behavior_stack.join(" ")
+      end
+    end
+
     module MinitestHooks
+      include Capybara::Experience::DSL
+      include Capybara::Experience::MinitestBehaviorDSL
+
       def after_teardown
         Capybara::Experience::Pool.instance.reset_idle!
         super

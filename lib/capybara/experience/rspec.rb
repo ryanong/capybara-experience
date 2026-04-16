@@ -45,6 +45,7 @@ module Capybara
 
     RSpec.configure do |config|
       config.include BehaviorDSL
+      config.include Capybara::Experience::DSL, type: :feature
       config.after :each, type: :feature, js: true do
         Capybara::Experience::Pool.instance.reset_idle!
       end

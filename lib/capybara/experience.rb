@@ -45,6 +45,20 @@ module Capybara
       end
     end
 
+    module DSL
+    end
+
+    def self.inherited(subclass)
+      super
+      return unless subclass.name
+
+      method_name = subclass.name.split("::").last
+      subclass_ref = subclass
+      DSL.define_method(method_name) do |**kwargs|
+        subclass_ref.new(self, **kwargs)
+      end
+    end
+
     class Error < StandardError; end
 
     module UnifySessionPool

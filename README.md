@@ -29,9 +29,51 @@ Or install it yourself as:
 
 ## Usage
 
-### Basic
+### Setup
+
+#### RSpec
+```ruby
+# spec/spec_helper.rb
+require "capybara/experience"
+require "capybara/experience/rspec"
+```
+
+This automatically includes `Capybara::Experience::DSL` and `BehaviorDSL` in feature specs.
+
+#### Minitest
+```ruby
+# test/test_helper.rb
+require "capybara/experience"
+require "capybara/experience/minitest"
+```
+
+Include the modules in your test class:
+```ruby
+class ApplicationIntegrationTest < Minitest::Test
+  include Capybara::DSL
+  include Capybara::Minitest::Assertions
+  include Capybara::Experience::MinitestHooks # includes DSL and resets pool after each test
+end
+```
+
+### Test Context & DSL
+
+Experience instances accept a test context as their first argument, enabling assertions to be called from within Experience subclasses. When you subclass `Capybara::Experience`, a factory method is automatically added to `Capybara::Experience::DSL` that passes `self` as the test context:
+
+```ruby
+class UserExperience < Capybara::Experience
+  # creates UserExperience() factory method on Capybara::Experience::DSL
+end
+
+# In a test:
+ux = UserExperience() # equivalent to UserExperience.new(self)
+```
+
+### Basic Example
+
 This scenario is for your standard user/admin.
-1. We need to create a file for each experience
+
+1. Create a file for each experience:
 
 ```ruby
 # spec/support/experiences/user_experience.rb
@@ -42,7 +84,8 @@ class UserExperience < Capybara::Experience
     @user = user
     login_as user, scope: :user
     visit '/'
-    assert_text "#{@user.name} Welcome!"
+    # assertions work inside Experience when test context is provided
+    expect(page).to have_content("#{@user.name} Welcome!")
     self
   end
 
@@ -53,17 +96,13 @@ end
 ```
 
 ```ruby
-# spec/support/experiences/user_experience.rb
+# spec/support/experiences/admin_experience.rb
 class AdminExperience < Capybara::Experience
-  def initialize(*args)
-    super
-  end
-
   def login(user)
     @user = user
     login_as user, scope: :admin
     visit '/admin/login'
-    assert_text "Home"
+    expect(page).to have_content("Home")
   end
 
   private
@@ -72,7 +111,7 @@ class AdminExperience < Capybara::Experience
 end
 ```
 
-2. now we need to create some capabilities. These capability files associate to each page, imagine each capability is an api to a page.
+2. Create some capabilities. These capability files associate to each page, imagine each capability is an api to a page.
 
 ```ruby
 # spec/support/capabilities/sign_up.rb
@@ -86,21 +125,19 @@ module Capabilities::SignUp
     fill_in "password", with: password
     fill_in "password_confirmation", with: password
     click_button "Submit"
-    assert_text "Welcome #{email}"
+    expect(page).to have_content("Welcome #{email}")
   end
 end
 ```
 
-3. write the spec
+3. Write the spec using the DSL factory methods:
+
 ```ruby
 # spec/features/sign_up_flow_spec.rb
-RSpec.describe "sign up flow", feature: true do
-  let(:guest_experience) { GuestExperience.new.extend(Capabilities::SignUp) }
-  let(:admin_experience) { AdminExperience.new.extend(Capabilities::Admin::ManageUser) }
-  
+RSpec.describe "sign up flow", type: :feature do
   it "works" do
-    behavior "user can sign up" do # behaviors are an added DSL by capybara-experiences to group interactions & assertions
-      guest_ux = GuestExperience.new
+    behavior "user can sign up" do
+      guest_ux = GuestExperience() # factory method passes self as test context
       guest_ux.navigate_to_sign_up
 
       guest_ux.sign_up(
@@ -112,9 +149,9 @@ RSpec.describe "sign up flow", feature: true do
     end
 
     behavior "admin can see user" do
-      admin_ux = AdminExperience.new
+      admin_ux = AdminExperience()
       admin_ux.login
-      admin_ux.to have_content "user@example.com"
+      expect(admin_ux).to have_content "user@example.com"
     end
   end
 end

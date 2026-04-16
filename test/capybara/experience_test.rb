@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 
+class TestUserExperience < Capybara::Experience
+  def verify_content(text)
+    visit "/foo"
+    assert_text(text)
+  end
+end
+
 class ExperienceMinitestTest < Minitest::Test
   include Capybara::DSL
   include Capybara::Minitest::Assertions
@@ -81,6 +88,57 @@ class ExperienceMinitestTest < Minitest::Test
     ux.assert_text("Another World")
     ux.assert_no_text("Does not exist")
     assert_equal count_before + 2, self.assertions
+  end
+
+  def test_dsl_creates_factory_method_for_subclass
+    ux = TestUserExperience()
+    assert_instance_of TestUserExperience, ux
+    assert_equal self, ux.test_context
+  end
+
+  def test_dsl_factory_passes_kwargs
+    ux = TestUserExperience(driver_name: :javascript_test)
+    assert_equal :javascript_test, ux.driver_name
+    assert_equal self, ux.test_context
+  end
+
+  def test_dsl_factory_method_works_with_assertions
+    ux = TestUserExperience()
+    ux.verify_content("Another World")
+  end
+
+  def test_behavior_yields_block
+    executed = false
+    behavior "step one" do
+      executed = true
+    end
+    assert executed
+  end
+
+  def test_behavior_tracks_current_behavior
+    behavior "login" do
+      assert_equal "login", current_behavior
+    end
+    assert_equal "", current_behavior
+  end
+
+  def test_behavior_nests
+    behavior "login" do
+      behavior "fill in form" do
+        assert_equal "login fill in form", current_behavior
+      end
+      assert_equal "login", current_behavior
+    end
+    assert_equal "", current_behavior
+  end
+
+  def test_behavior_pops_on_failure
+    assert_raises(RuntimeError) do
+      behavior "broken step" do
+        raise "boom"
+      end
+    end
+    assert_equal "", current_behavior
   end
 
   def test_pool_resets_via_minitest_hooks
